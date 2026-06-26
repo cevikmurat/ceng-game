@@ -6372,15 +6372,6 @@ function escHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&
     setupBell();
   }
   function setupBell(){
-    if(document.getElementById('mpBell')) return;
-    var st=document.createElement('style');
-    st.textContent='#mpBell{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px;z-index:600;display:none;width:46px;height:46px;border-radius:50%;border:1.5px solid var(--ink,#2a1a0e);background:var(--paper,#f4ead0);font-size:22px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.25);align-items:center;justify-content:center;padding:0;}#mpBellBadge{position:absolute;top:-5px;right:-5px;min-width:20px;height:20px;line-height:20px;padding:0 5px;border-radius:10px;background:var(--danger,#9a3221);color:#fff;font-size:12px;font-weight:700;font-family:sans-serif;text-align:center;}';
-    document.head.appendChild(st);
-    var bell=document.createElement('button'); bell.id='mpBell'; bell.type='button';
-    bell.innerHTML='🔔<span id="mpBellBadge"></span>';
-    bell.title='Davetler';
-    bell.addEventListener('click', function(){ try{ if(window.MP && MP.openLobby) MP.openLobby(); }catch(e){} });
-    document.body.appendChild(bell);
     try{
       if(window.INV && INV.refresh && !INV.__bellHooked){
         INV.__bellHooked=true;
@@ -6392,13 +6383,18 @@ function escHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&
     updateBell();
   }
   function updateBell(){
-    var bell=document.getElementById('mpBell'), badge=document.getElementById('mpBellBadge');
-    if(!bell) return;
     var n=(window.INV && INV.count) ? INV.count() : 0;
-    var app=document.getElementById('app');
-    var onMenu = !app || app.style.display==='none';   // hidden app = menu/gate/lobby, not active game
-    if(n>0 && onMenu){ bell.style.display='flex'; if(badge) badge.textContent=n; }
-    else { bell.style.display='none'; }
+    var btn=document.getElementById('playOnlineBtn'); if(!btn) return;
+    var bell=document.getElementById('mpBell');
+    // plain bell + count INSIDE the Play Online button (no circle); re-attach if a re-translation wiped it
+    if(!bell || bell.parentNode!==btn){
+      if(bell && bell.parentNode) bell.parentNode.removeChild(bell);
+      bell=document.createElement('span'); bell.id='mpBell';
+      bell.style.cssText='margin-left:8px;font-size:0.95em;vertical-align:middle;white-space:nowrap;';
+      btn.appendChild(bell);
+    }
+    if(n>0){ bell.style.display='inline'; bell.textContent='🔔 '+n; }
+    else { bell.style.display='none'; bell.textContent=''; }
   }
   function addBackToMenu(){
     var panel=document.querySelector('.cgo-panel[data-panel="login"]');

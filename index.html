@@ -1009,6 +1009,8 @@
   .menu-auth-btn:active{ opacity:.6; }
   .menu-auth-guest{ color:var(--accent); font-weight:700; }
   .menu-auth-sep{ opacity:.4; }
+  /* Invitation inbox buttons size to their content (the .btn class otherwise forces width:100%) */
+  #mpInbox .btn{ width:auto; flex:0 0 auto; white-space:nowrap; }
 
   /* When in Turkish, disable CSS uppercase across the entire UI — Turkish content
      should be written in its already-correct case in the translation strings.
@@ -6273,18 +6275,8 @@ MP.setStatus=function(msg){ const s=document.getElementById('mpStatus'),t=docume
 MP.toast=function(msg){ const t=document.getElementById('mpToast'); if(t) t.textContent=msg||''; };
 
 INV.refresh=function(){
-  // update menu-button badge
-  const btn=document.getElementById('playOnlineBtn');
-  if(btn){
-    let badge=document.getElementById('mpMenuBadge');
-    const n=INV.count();
-    if(n>0){
-      if(!badge){ badge=document.createElement('span'); badge.id='mpMenuBadge';
-        badge.style.cssText='display:inline-block;min-width:20px;height:20px;line-height:20px;margin-left:8px;padding:0 6px;border-radius:10px;background:var(--danger);color:#fff;font-size:12px;font-weight:700;text-align:center;';
-        btn.appendChild(badge); }
-      badge.textContent=n;
-    } else if(badge){ badge.remove(); }
-  }
+  // menu-button badge removed — the bell icon is the single notification indicator
+  var oldMenuBadge=document.getElementById('mpMenuBadge'); if(oldMenuBadge) oldMenuBadge.remove();
   // update inbox list (if lobby exists)
   const box=document.getElementById('mpInbox'); if(!box) return;
   const cnt=document.getElementById('mpInboxCount'); if(cnt) cnt.textContent=INV.count()?('('+INV.count()+')'):'';

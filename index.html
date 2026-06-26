@@ -6217,7 +6217,7 @@ MP.initUI=function(){
     + '<div style="border-top:1px solid var(--ink-soft);opacity:.5;margin:18px 0;"></div>'
     + '<div id="mpInviteArea">'
     +   '<div style="font-weight:700;margin-bottom:8px;">Invite a friend</div>'
-    +   '<div id="mpLoginHint" style="display:none;font-size:13px;opacity:.8;margin-bottom:8px;">Log in (tap the name badge at the top) to invite friends by username.</div>'
+    +   '<div id="mpLoginHint" style="display:none;font-size:13px;opacity:.8;margin-bottom:8px;">Log in from the main menu (tap Back) to invite friends by username.</div>'
     +   '<div id="mpInviteForm">'
     +     '<input id="mpFriendUser" placeholder="Friend\'s username" maxlength="20" style="'+inp+'margin-bottom:8px;">'
     +     '<button class="btn btn-action-secondary" id="mpInviteBtn" style="width:100%;">Invite</button>'
@@ -6360,7 +6360,9 @@ function escHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&
   .cgo-chip b{color:var(--accent,#b8741a);}
   /* On the main menu, tuck the login/account chip just below the EN/TR toggle (aligned with
      the menu card) instead of floating in the corner. In-game it keeps its top-left spot. */
-  body:has(#startOverlay:not(.hidden)) .cgo-chip{ top: calc(env(safe-area-inset-top,0px) + 70px); left: max(16px, calc(50% - 168px)); }
+  body:has(#startOverlay:not(.hidden)):has(#mpLobby.hidden) .cgo-chip{ top: calc(env(safe-area-inset-top,0px) + 70px); left: max(16px, calc(50% - 168px)); }
+  /* Hide the floating login badge while the online lobby is open (it has its own login prompt). */
+  body:has(#mpLobby:not(.hidden)) .cgo-chip{ display: none !important; }
   .cgo-acct-score{font-family:var(--font-mono,monospace);font-size:22px;text-align:center;color:var(--accent,#b8741a);margin:6px 0 16px;font-weight:700;}
   .cgo-danger{background:var(--danger,#9a3221)!important;}
 </style>
@@ -6444,7 +6446,7 @@ function escHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&
   const overlay = document.createElement('div');
   overlay.className = 'cgo-overlay';
   overlay.innerHTML = `
-    <div class="cgo-card">
+    <div class="cgo-card" lang="${TR ? 'tr' : 'en'}">
       <div class="cgo-title">CENG</div>
       <div class="cgo-msg" id="cgoMsg"></div>
 

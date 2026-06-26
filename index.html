@@ -6360,7 +6360,7 @@ function escHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&
   .cgo-chip b{color:var(--accent,#b8741a);}
   /* On the main menu, tuck the login/account chip just below the EN/TR toggle (aligned with
      the menu card) instead of floating in the corner. In-game it keeps its top-left spot. */
-  body:has(#startOverlay:not(.hidden)):has(#mpLobby.hidden) .cgo-chip{ top: calc(env(safe-area-inset-top,0px) + 70px); left: max(16px, calc(50% - 168px)); }
+  body:has(#startOverlay:not(.hidden)):has(#mpLobby.hidden) .cgo-chip{ top: calc(env(safe-area-inset-top,0px) + 104px); left: max(16px, calc(50% - 168px)); }
   /* Hide the floating login badge while the online lobby is open (it has its own login prompt). */
   body:has(#mpLobby:not(.hidden)) .cgo-chip{ display: none !important; }
   .cgo-acct-score{font-family:var(--font-mono,monospace);font-size:22px;text-align:center;color:var(--accent,#b8741a);margin:6px 0 16px;font-weight:700;}

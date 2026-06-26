@@ -3121,7 +3121,7 @@ function updateUI() {
   // Pass-and-play board flip: rotate the board 180° while it's player B's turn so they
   // see their own pieces at the bottom. Bot mode never flips (player A is always "you").
   const shouldFlip = mode === 'online'
-    ? (MP.mySide === 'b' && !state.winner)
+    ? (MP.mySide === 'b')
     : (mode === 'human' && state.activePlayer === 'b' && !state.winner);
   document.body.setAttribute('data-flip', shouldFlip ? 'b' : 'a');
 
@@ -6354,9 +6354,13 @@ function escHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&
   .cgo-msg.err{display:block;background:rgba(154,50,33,.14);color:var(--danger,#9a3221);}
   .cgo-msg.ok{display:block;background:rgba(74,107,58,.14);color:var(--safe,#4a6b3a);}
   .cgo-panel{display:none;} .cgo-panel.show{display:block;}
-  .cgo-chip{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:8px;z-index:500;display:none;align-items:center;gap:7px;background:var(--paper,#f4ead0);border:1px solid var(--ink-soft,#6b4226);border-radius:20px;padding:5px 11px;font-family:var(--font-display,serif);font-weight:600;font-size:13px;color:var(--ink,#2a1a0e);box-shadow:0 4px 12px var(--shadow,rgba(0,0,0,.35));cursor:pointer;}
+  .cgo-chip{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:8px;z-index:500;display:none;align-items:center;gap:7px;background:var(--paper,#f4ead0);border:1.5px solid var(--ink,#2a1a0e);border-radius:12px;padding:8px 15px;font-family:var(--font-display,serif);font-weight:700;font-size:13px;color:var(--ink,#2a1a0e);box-shadow:0 3px 0 rgba(0,0,0,.18),0 6px 14px var(--shadow,rgba(0,0,0,.28));cursor:pointer;transition:transform .12s,box-shadow .12s;}
+  .cgo-chip:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.18);}
   .cgo-chip.show{display:inline-flex;}
   .cgo-chip b{color:var(--accent,#b8741a);}
+  /* On the main menu, tuck the login/account chip just below the EN/TR toggle (aligned with
+     the menu card) instead of floating in the corner. In-game it keeps its top-left spot. */
+  body:has(#startOverlay:not(.hidden)) .cgo-chip{ top: calc(env(safe-area-inset-top,0px) + 70px); left: max(16px, calc(50% - 168px)); }
   .cgo-acct-score{font-family:var(--font-mono,monospace);font-size:22px;text-align:center;color:var(--accent,#b8741a);margin:6px 0 16px;font-weight:700;}
   .cgo-danger{background:var(--danger,#9a3221)!important;}
 </style>

@@ -2063,6 +2063,8 @@
 <!-- Firebase Realtime Database (online multiplayer) -->
 <script src="https://www.gstatic.com/firebasejs/11.5.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.5.0/firebase-database-compat.js"></script>
+<!-- Google Identity Services (Sign in with Google) -->
+<script src="https://accounts.google.com/gsi/client" async></script>
 </head>
 <body data-theme="atelier">
 
@@ -6418,6 +6420,63 @@ function escHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&
     panel.appendChild(b);
   }
   if(document.readyState!=='loading') wire(); else document.addEventListener('DOMContentLoaded', wire);
+})();
+</script>
+<script>
+/* Sign in with Google (Google Identity Services) */
+(function(){
+  var CLIENT_ID='839404243861-178oliqb28vf02b1cupufpue4gmr0hfq.apps.googleusercontent.com';
+  function ensureMethod(){
+    if(window.CengAPI && !CengAPI.googleLogin){
+      CengAPI.googleLogin = async function(credential){
+        var res = await fetch(this.base + '/google-login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({credential:credential}) });
+        var d={}; try{ d=await res.json(); }catch(e){}
+        if(!res.ok) throw new Error((d&&d.message) || 'Google login failed');
+        var p=d.dataPlayer||{};
+        this.token=p.token; this.user={username:p.username, score:(p.score||0)}; this._save();
+        return d;
+      };
+    }
+  }
+  function onCredential(response){
+    ensureMethod();
+    var m=document.getElementById('cgoMsg');
+    if(!window.CengAPI || !CengAPI.googleLogin){ if(m){m.textContent='Bağlantı hazır değil.';m.className='cgo-msg err';} return; }
+    if(m){ m.textContent='Giriş yapılıyor…'; m.className='cgo-msg'; }
+    CengAPI.googleLogin(response.credential).then(function(){ location.reload(); })
+      .catch(function(err){ if(m){ m.textContent=(err&&err.message)||'Google ile giriş başarısız'; m.className='cgo-msg err'; } });
+  }
+  function ensureWrap(){
+    var panel=document.querySelector('.cgo-panel[data-panel="login"]'); if(!panel) return null;
+    var wrap=document.getElementById('gsiWrap');
+    if(!wrap){
+      wrap=document.createElement('div'); wrap.id='gsiWrap';
+      wrap.style.cssText='display:flex;justify-content:center;margin:14px 0 6px;';
+      var sub=panel.querySelector('.cgo-sub');
+      if(sub && sub.nextSibling) panel.insertBefore(wrap, sub.nextSibling); else panel.insertBefore(wrap, panel.firstChild);
+    }
+    return wrap;
+  }
+  function renderGoogleButton(){
+    if(!(window.google && google.accounts && google.accounts.id)) return false;
+    var wrap=ensureWrap(); if(!wrap) return false;
+    try{
+      google.accounts.id.initialize({ client_id: CLIENT_ID, callback: onCredential });
+      wrap.innerHTML='';
+      google.accounts.id.renderButton(wrap, { theme:'outline', size:'large', shape:'pill', text:'continue_with', width:250 });
+      return true;
+    }catch(e){ console.error('GIS init failed', e); return false; }
+  }
+  function start(){
+    ensureMethod();
+    var tries=0;
+    var iv=setInterval(function(){ tries++; if(renderGoogleButton() || tries>40) clearInterval(iv); }, 300);
+    var ov=document.querySelector('.cgo-overlay');
+    if(ov && window.MutationObserver){
+      new MutationObserver(function(){ if(ov.classList.contains('show')) setTimeout(renderGoogleButton, 50); }).observe(ov, {attributes:true, attributeFilter:['class']});
+    }
+  }
+  if(document.readyState!=='loading') start(); else document.addEventListener('DOMContentLoaded', start);
 })();
 </script>
 </body>

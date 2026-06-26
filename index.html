@@ -1002,6 +1002,13 @@
   /* Only uppercase in English — Turkish has dotted/dotless i issues with CSS uppercase */
   :lang(en) .btn { text-transform: uppercase; }
   #rollBtn { font-size: 16px; }
+  /* Menu footer: Log in / Play as guest (so guests feel welcome to just play) */
+  #menuAuthRow{ display:flex; gap:8px; justify-content:center; align-items:center; margin-top:16px; flex-wrap:wrap; }
+  .menu-auth-btn{ background:none; border:none; color:var(--ink-soft); font-family:var(--font-display); font-weight:600; font-size:15px; cursor:pointer; padding:6px 8px; text-decoration:underline; text-underline-offset:3px; }
+  [data-theme="atelier"] .menu-auth-btn{ font-style:italic; }
+  .menu-auth-btn:active{ opacity:.6; }
+  .menu-auth-guest{ color:var(--accent); font-weight:700; }
+  .menu-auth-sep{ opacity:.4; }
 
   /* When in Turkish, disable CSS uppercase across the entire UI — Turkish content
      should be written in its already-correct case in the translation strings.
@@ -2093,6 +2100,12 @@
       <button class="btn btn-action-tertiary" id="demoBtn" data-i18n="menu.watchDemo">Watch Demo</button>
       <button class="btn btn-action-quiet" id="statsBtn" data-i18n="menu.stats">Stats &amp; Leaderboard</button>
       <button class="btn btn-action-quiet" id="howtoBtn" data-i18n="menu.howToPlay">How to Play</button>
+      <div id="menuAuthRow">
+        <button id="menuLoginBtn" class="menu-auth-btn" data-i18n="menu.login">Log in</button>
+        <span id="menuAuthSep" class="menu-auth-sep">·</span>
+        <button id="menuGuestBtn" class="menu-auth-btn menu-auth-guest" data-i18n="menu.guest">Play as guest</button>
+        <button id="menuAccountBtn" class="menu-auth-btn" style="display:none;" data-i18n="menu.account">My account</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2325,6 +2338,9 @@ const TRANSLATIONS = {
     'menu.vsComputer': 'Play vs Computer',
     'menu.passPlay': 'Pass & Play',
     'menu.playOnline': 'Play Online',
+    'menu.login': 'Log in',
+    'menu.guest': 'Play as guest',
+    'menu.account': 'My account',
     'menu.pickSide': 'Choose your side:',
     'menu.sideNavy': 'Navy',
     'menu.sideRed': 'Red',
@@ -2467,6 +2483,9 @@ const TRANSLATIONS = {
     'menu.vsComputer': 'Bilgisayara Karşı Oyna',
     'menu.passPlay': 'Arkadaşınla Oyna',
     'menu.playOnline': 'Çevrimiçi Oyna',
+    'menu.login': 'Giriş yap',
+    'menu.guest': 'Misafir olarak oyna',
+    'menu.account': 'Hesabım',
     'menu.pickSide': 'Tarafını seç:',
     'menu.sideNavy': 'Lacivert',
     'menu.sideRed': 'Kırmızı',
@@ -6326,6 +6345,81 @@ function escHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&
   if(document.readyState!=='loading') setup(); else document.addEventListener('DOMContentLoaded',setup);
 })();
 </script>
+<script>
+/* Menu footer: Log in / Play as guest wiring */
+(function(){
+  function openLogin(){ var c=document.querySelector('.cgo-chip'); if(c){ c.click(); return; } var o=document.querySelector('.cgo-overlay'); if(o) o.classList.add('show'); }
+  function playGuest(){ try{ localStorage.setItem('cengGuest','1'); }catch(e){} var o=document.querySelector('.cgo-overlay'); if(o) o.classList.remove('show'); updateAuth(); }
+  function updateAuth(){
+    var loggedIn = !!(window.CengAPI && CengAPI.isLoggedIn && CengAPI.isLoggedIn());
+    var login=document.getElementById('menuLoginBtn'), guest=document.getElementById('menuGuestBtn'), sep=document.getElementById('menuAuthSep'), acct=document.getElementById('menuAccountBtn');
+    if(!login||!guest||!sep||!acct) return;
+    login.style.display = loggedIn ? 'none' : '';
+    guest.style.display = loggedIn ? 'none' : '';
+    sep.style.display   = loggedIn ? 'none' : '';
+    acct.style.display  = loggedIn ? '' : 'none';
+  }
+  function wire(){
+    var login=document.getElementById('menuLoginBtn'), guest=document.getElementById('menuGuestBtn'), acct=document.getElementById('menuAccountBtn');
+    if(login) login.addEventListener('click', openLogin);
+    if(guest) guest.addEventListener('click', playGuest);
+    if(acct)  acct.addEventListener('click', openLogin);
+    try{
+      if(window.CengAPI && CengAPI.login && !CengAPI.__authHooked){
+        CengAPI.__authHooked = true;
+        var _l=CengAPI.login.bind(CengAPI);
+        CengAPI.login=async function(){ var r=await _l.apply(CengAPI,arguments); try{updateAuth();}catch(e){} return r; };
+        var _o=CengAPI.logout.bind(CengAPI);
+        CengAPI.logout=function(){ var r=_o.apply(CengAPI,arguments); try{updateAuth();}catch(e){} return r; };
+      }
+    }catch(e){}
+    updateAuth();
+    addBackToMenu();
+    setupBell();
+  }
+  function setupBell(){
+    if(document.getElementById('mpBell')) return;
+    var st=document.createElement('style');
+    st.textContent='#mpBell{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);right:12px;z-index:600;display:none;width:46px;height:46px;border-radius:50%;border:1.5px solid var(--ink,#2a1a0e);background:var(--paper,#f4ead0);font-size:22px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.25);align-items:center;justify-content:center;padding:0;}#mpBellBadge{position:absolute;top:-5px;right:-5px;min-width:20px;height:20px;line-height:20px;padding:0 5px;border-radius:10px;background:var(--danger,#9a3221);color:#fff;font-size:12px;font-weight:700;font-family:sans-serif;text-align:center;}';
+    document.head.appendChild(st);
+    var bell=document.createElement('button'); bell.id='mpBell'; bell.type='button';
+    bell.innerHTML='🔔<span id="mpBellBadge"></span>';
+    bell.title='Davetler';
+    bell.addEventListener('click', function(){ try{ if(window.MP && MP.openLobby) MP.openLobby(); }catch(e){} });
+    document.body.appendChild(bell);
+    try{
+      if(window.INV && INV.refresh && !INV.__bellHooked){
+        INV.__bellHooked=true;
+        var _r=INV.refresh.bind(INV);
+        INV.refresh=function(){ var x=_r.apply(INV,arguments); try{updateBell();}catch(e){} return x; };
+      }
+    }catch(e){}
+    setInterval(updateBell, 1500);
+    updateBell();
+  }
+  function updateBell(){
+    var bell=document.getElementById('mpBell'), badge=document.getElementById('mpBellBadge');
+    if(!bell) return;
+    var n=(window.INV && INV.count) ? INV.count() : 0;
+    var app=document.getElementById('app');
+    var onMenu = !app || app.style.display==='none';   // hidden app = menu/gate/lobby, not active game
+    if(n>0 && onMenu){ bell.style.display='flex'; if(badge) badge.textContent=n; }
+    else { bell.style.display='none'; }
+  }
+  function addBackToMenu(){
+    var panel=document.querySelector('.cgo-panel[data-panel="login"]');
+    if(!panel || panel.querySelector('.cgo-back-menu')) return;
+    var tr=(function(){ try{ return (localStorage.getItem('cengLang')||'tr')==='tr'; }catch(e){ return true; } })();
+    var b=document.createElement('button');
+    b.className='cgo-link cgo-back-menu'; b.type='button';
+    b.textContent = tr ? '← Menüye dön' : '← Back to menu';
+    b.style.cssText='display:block;margin:12px auto 0;font-size:14px;';
+    b.addEventListener('click', function(){ var o=document.querySelector('.cgo-overlay'); if(o) o.classList.remove('show'); });
+    panel.appendChild(b);
+  }
+  if(document.readyState!=='loading') wire(); else document.addEventListener('DOMContentLoaded', wire);
+})();
+</script>
 </body>
 </html>
 
@@ -6360,7 +6454,8 @@ function escHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&
   .cgo-chip b{color:var(--accent,#b8741a);}
   /* On the main menu, tuck the login/account chip just below the EN/TR toggle (aligned with
      the menu card) instead of floating in the corner. In-game it keeps its top-left spot. */
-  body:has(#startOverlay:not(.hidden)):has(#mpLobby.hidden) .cgo-chip{ top: calc(env(safe-area-inset-top,0px) + 104px); left: max(16px, calc(50% - 168px)); }
+  /* Floating login badge is hidden on the menu (the menu has its own Log in / Play as guest footer) and on the lobby; it only appears in-game to show your score. */
+  body:has(#startOverlay:not(.hidden)) .cgo-chip{ display: none !important; }
   /* Hide the floating login badge while the online lobby is open (it has its own login prompt). */
   body:has(#mpLobby:not(.hidden)) .cgo-chip{ display: none !important; }
   .cgo-acct-score{font-family:var(--font-mono,monospace);font-size:22px;text-align:center;color:var(--accent,#b8741a);margin:6px 0 16px;font-weight:700;}
